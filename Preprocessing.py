@@ -1,4 +1,5 @@
 import cv2
+import cv2
 import numpy as np
 #from os import listdir
 #from os.path import isfile, join
@@ -7,7 +8,7 @@ import os
 import sys
 import time
 from matplotlib import pyplot as plt
-
+from MSRCR import MSR_color_restoration
 
 import json
 
@@ -69,6 +70,7 @@ def brightening(img):
 def clahe(bgr):
     lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
     lab_planes = cv2.split(lab)
+    lab_planes=list(lab_planes)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(50, 50))
 
     lab_planes[0] = clahe.apply(lab_planes[0])
@@ -110,113 +112,135 @@ for img_name in img_list:
     name_0 = body + ".00.jpg"
     cv2.imwrite(os.path.join(result_path, name_0), img)
     
-
-    #1 B write Brightening image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[1/15] Brightening")
-    img_1 = brightening(img)
-    name_1 = body + ".01.jpg"
-    cv2.imwrite(os.path.join(result_path, name_1), img_1)
+    #
+    # #1 B write Brightening image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[1/15] Brightening")
+    # img_1 = brightening(img)
+    # name_1 = body + ".01.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_1), img_1)
 
 
     #2 R write Retinex image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[2/15] Retinex")
+    # img_2 = MSRCR(img,config['sigma_list'],config['G'],config['b'],config['alpha'],config['beta'],config['low_clip'],config['high_clip'])
+    # name_2 = body + ".02.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_2), img_2)
+
+    # THE  RETINEX ALGO
     print("  ", time.strftime("%H:%M:%S", time.localtime()), "[2/15] Retinex")
-    img_2 = MSRCR(img,config['sigma_list'],config['G'],config['b'],config['alpha'],config['beta'],config['low_clip'],config['high_clip'])
+    img_2 = MSR_color_restoration(
+        img,
+        config['sigma'],
+        config['weights'],
+        config['alpha'],
+        config['beta'],
+        config['high_clip'],
+        config['low_clip'],
+        config['gamma']
+    )
     name_2 = body + ".02.jpg"
-    cv2.imwrite(os.path.join(result_path, name_2), img_2)
+    cv2.imwrite(os.path.join(result_path, name_2),img_2)
+    print("  ", time.strftime("%H:%M:%S", time.localtime()), "ENDED RETINEX TIME")
 
+    # #3 C write CLAHE image file into result document
 
-    #3 C write CLAHE image file into result document
     print("  ", time.strftime("%H:%M:%S", time.localtime()), "[3/15] CLAHE")
     img_3 = clahe(img)
     name_3 = body + ".03.jpg"
     cv2.imwrite(os.path.join(result_path, name_3), img_3)
+    print("  ", time.strftime("%H:%M:%S", time.localtime()), "ENDED CLAHE TIME")
 
-
-    #4 B+R write Brightening + Retinex image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[4/15] Brightening + Retinex")
-    img_4 = MSRCR(img_1,config['sigma_list'],config['G'],config['b'],config['alpha'],config['beta'],config['low_clip'],config['high_clip'])
+    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[3/15] BILATERAL FILTER")
+    img_4 = cv2.bilateralFilter(img, 9, 75, 75)
     name_4 = body + ".04.jpg"
     cv2.imwrite(os.path.join(result_path, name_4), img_4)
+    print("  ", time.strftime("%H:%M:%S", time.localtime()), "ENDED BILATERAL TIME")
 
-
-    #5 R+B write Retinex + Brightening image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[5/15] Retinex + Brightening")
-    img_5 = brightening(img_2)
-    name_5 = body + ".05.jpg"
-    cv2.imwrite(os.path.join(result_path, name_5), img_5)
-
-
-    #6 B+C write Brightening + CLAHE image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[6/15] Brightening + CLAHE")
-    img_6 = clahe(img_1)
-    name_6 = body + ".06.jpg"
-    cv2.imwrite(os.path.join(result_path, name_6), img_6)
-
-
-    #7 C+B write CLAHE + Brightening image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[7/15] CLAHE + Brightening")
-    img_7 = brightening(img_3)
-    name_7 = body + ".07.jpg"
-    cv2.imwrite(os.path.join(result_path, name_7), img_7)
-
-
-    #8 R+C write Retinex + CLAHE image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[8/15] Retinex + CLAHE")
-    img_8 = clahe(img_2)
-    name_8 = body + ".08.jpg"
-    cv2.imwrite(os.path.join(result_path, name_8), img_8)
-
-
-    #9 C+R write CLAHE + Retinex image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[9/15] CLAHE + Retinex")
-    img_9 = MSRCR(img_3,config['sigma_list'],config['G'],config['b'],config['alpha'],config['beta'],config['low_clip'],config['high_clip'])
-    name_9 = body + ".09.jpg"
-    cv2.imwrite(os.path.join(result_path, name_9), img_9)
-
-
-    #10 B+R+C write Brightening + Retinex + CLAHE image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[10/15] Brightening + Retinex + CLAHE")
-    img_10 = clahe(img_4)
-    name_10 = body + ".10.jpg"
-    cv2.imwrite(os.path.join(result_path, name_10), img_10)
-
-
-    #11 B+C+R write Brightening + CLAHE + Retinex image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[11/15] Brightening + CLAHE + Retinex")
-    img_11 = MSRCR(img_6,config['sigma_list'],config['G'],config['b'],config['alpha'],config['beta'],config['low_clip'],config['high_clip'])
-    name_11 = body + ".11.jpg"
-    cv2.imwrite(os.path.join(result_path, name_11), img_11)
-
-
-    #12 R+B+C write Retinex + Brightening + CLAHE image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[12/15] Retinex + Brightening + CLAHE")
-    img_12 = clahe(img_5)
-    name_12 = body + ".12.jpg"
-    cv2.imwrite(os.path.join(result_path, name_12), img_12)
-
-
-    #13 R+C+B write Retinex + CLAHE + Brightening image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[13/15] Retinex + CLAHE + Brightening")
-    img_13 = brightening(img_8)
-    name_13 = body + ".13.jpg"
-    cv2.imwrite(os.path.join(result_path, name_13), img_13)
-
-
-    #14 C+B+R write CLAHE + Brightening + Retinex image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[14/15] CLAHE + Brightening + Retinex")
-    img_14 = MSRCR(img_7,config['sigma_list'],config['G'],config['b'],config['alpha'],config['beta'],config['low_clip'],config['high_clip'])
-    name_14 = body + ".14.jpg"
-    cv2.imwrite(os.path.join(result_path, name_14), img_14)
-
-
-    #15 C+R+B write CLAHE + Retinex + Brightening image file into result document
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[15/15] CLAHE + Retinex + Brightening")
-    img_15 = brightening(img_9)
-    name_15 = body + ".15.jpg"
-    cv2.imwrite(os.path.join(result_path, name_15), img_15)
-    
-
-    print("Processing finished: ", img_name)
+    # #4 B+R write Brightening + Retinex image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[4/15] Brightening + Retinex")
+    # img_4 = MSRCR(img_1,config['sigma_list'],config['G'],config['b'],config['alpha'],config['beta'],config['low_clip'],config['high_clip'])
+    # name_4 = body + ".04.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_4), img_4)
+    #
+    #
+    # #5 R+B write Retinex + Brightening image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[5/15] Retinex + Brightening")
+    # img_5 = brightening(img_2)
+    # name_5 = body + ".05.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_5), img_5)
+    #
+    #
+    # #6 B+C write Brightening + CLAHE image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[6/15] Brightening + CLAHE")
+    # img_6 = clahe(img_1)
+    # name_6 = body + ".06.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_6), img_6)
+    #
+    #
+    # #7 C+B write CLAHE + Brightening image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[7/15] CLAHE + Brightening")
+    # img_7 = brightening(img_3)
+    # name_7 = body + ".07.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_7), img_7)
+    #
+    #
+    # #8 R+C write Retinex + CLAHE image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[8/15] Retinex + CLAHE")
+    # img_8 = clahe(img_2)
+    # name_8 = body + ".08.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_8), img_8)
+    #
+    #
+    # #9 C+R write CLAHE + Retinex image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[9/15] CLAHE + Retinex")
+    # img_9 = MSRCR(img_3,config['sigma_list'],config['G'],config['b'],config['alpha'],config['beta'],config['low_clip'],config['high_clip'])
+    # name_9 = body + ".09.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_9), img_9)
+    #
+    #
+    # #10 B+R+C write Brightening + Retinex + CLAHE image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[10/15] Brightening + Retinex + CLAHE")
+    # img_10 = clahe(img_4)
+    # name_10 = body + ".10.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_10), img_10)
+    #
+    #
+    # #11 B+C+R write Brightening + CLAHE + Retinex image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[11/15] Brightening + CLAHE + Retinex")
+    # img_11 = MSRCR(img_6,config['sigma_list'],config['G'],config['b'],config['alpha'],config['beta'],config['low_clip'],config['high_clip'])
+    # name_11 = body + ".11.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_11), img_11)
+    #
+    #
+    # #12 R+B+C write Retinex + Brightening + CLAHE image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[12/15] Retinex + Brightening + CLAHE")
+    # img_12 = clahe(img_5)
+    # name_12 = body + ".12.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_12), img_12)
+    #
+    #
+    # #13 R+C+B write Retinex + CLAHE + Brightening image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[13/15] Retinex + CLAHE + Brightening")
+    # img_13 = brightening(img_8)
+    # name_13 = body + ".13.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_13), img_13)
+    #
+    #
+    # #14 C+B+R write CLAHE + Brightening + Retinex image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[14/15] CLAHE + Brightening + Retinex")
+    # img_14 = MSRCR(img_7,config['sigma_list'],config['G'],config['b'],config['alpha'],config['beta'],config['low_clip'],config['high_clip'])
+    # name_14 = body + ".14.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_14), img_14)
+    #
+    #
+    # #15 C+R+B write CLAHE + Retinex + Brightening image file into result document
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[15/15] CLAHE + Retinex + Brightening")
+    # img_15 = brightening(img_9)
+    # name_15 = body + ".15.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_15), img_15)
+    #
+    #
+    # print("Processing finished: ", img_name)
 
 
 
