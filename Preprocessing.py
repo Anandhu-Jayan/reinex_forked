@@ -71,7 +71,7 @@ def clahe(bgr):
     lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
     lab_planes = cv2.split(lab)
     lab_planes=list(lab_planes)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(50, 50))
+    clahe = cv2.createCLAHE(clipLimit=1, tileGridSize=(8,8))
 
     lab_planes[0] = clahe.apply(lab_planes[0])
 
@@ -126,10 +126,18 @@ for img_name in img_list:
     # name_2 = body + ".02.jpg"
     # cv2.imwrite(os.path.join(result_path, name_2), img_2)
 
+    # #3 C write CLAHE image file into result document
+
+    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[3/15] CLAHE")
+    img_3 = clahe(img)
+    name_3 = body + ".03.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_3), img_3)
+    print("  ", time.strftime("%H:%M:%S", time.localtime()), "ENDED CLAHE TIME")
     # THE  RETINEX ALGO
+
     print("  ", time.strftime("%H:%M:%S", time.localtime()), "[2/15] Retinex")
     img_2 = MSR_color_restoration(
-        img,
+        img_3,
         config['sigma'],
         config['weights'],
         config['alpha'],
@@ -138,21 +146,15 @@ for img_name in img_list:
         config['low_clip'],
         config['gamma']
     )
-    name_2 = body + ".02.jpg"
-    cv2.imwrite(os.path.join(result_path, name_2),img_2)
+    name_2 = body + ".022.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_2),img_2)
     print("  ", time.strftime("%H:%M:%S", time.localtime()), "ENDED RETINEX TIME")
 
-    # #3 C write CLAHE image file into result document
 
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "[3/15] CLAHE")
-    img_3 = clahe(img)
-    name_3 = body + ".03.jpg"
-    cv2.imwrite(os.path.join(result_path, name_3), img_3)
-    print("  ", time.strftime("%H:%M:%S", time.localtime()), "ENDED CLAHE TIME")
 
     print("  ", time.strftime("%H:%M:%S", time.localtime()), "[3/15] BILATERAL FILTER")
-    img_4 = cv2.bilateralFilter(img, 9, 75, 75)
-    name_4 = body + ".04.jpg"
+    img_4 = cv2.bilateralFilter(img_2, 7, 25, 9)
+    name_4 = body + ".023.jpg"
     cv2.imwrite(os.path.join(result_path, name_4), img_4)
     print("  ", time.strftime("%H:%M:%S", time.localtime()), "ENDED BILATERAL TIME")
 
