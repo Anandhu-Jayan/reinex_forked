@@ -154,9 +154,19 @@ for img_name in img_list:
 
     print("  ", time.strftime("%H:%M:%S", time.localtime()), "[3/15] BILATERAL FILTER")
     img_4 = cv2.bilateralFilter(img_2, 7, 25, 9)
-    name_4 = body + ".023.jpg"
+    name_4 = body + ".024.jpg"
     cv2.imwrite(os.path.join(result_path, name_4), img_4)
     print("  ", time.strftime("%H:%M:%S", time.localtime()), "ENDED BILATERAL TIME")
+
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[3/15] SHARPEN FILTER")
+    # kernel = np.array([[0, -1, 0],
+    #                    [-1, 5, -1],
+    #                    [0, -1, 0]])
+    # img_5=cv2.filter2D(src=img, ddepth=-1, kernel=kernel)
+    # name_5 = body + ".sharp.jpg"
+    # cv2.imwrite(os.path.join(result_path, name_5), img_5)
+    #
+    # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[3/15] ENDED SHARPEN FILTER")
 
     # #4 B+R write Brightening + Retinex image file into result document
     # print("  ", time.strftime("%H:%M:%S", time.localtime()), "[4/15] Brightening + Retinex")
